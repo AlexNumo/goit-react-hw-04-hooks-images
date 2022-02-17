@@ -1,46 +1,35 @@
-import React, {Component} from 'react';
+import {useState} from 'react';
 import {ImSearch} from 'react-icons/im';
-import PropTypes from "prop-types";
 import { SearchForm, SearchBarStyle, SearchFormInput, SearchFormButton, SearchFormButtonLabel } from './SearchBar.styled';
 
-export default class SearchBar extends Component{
 
-    state={
-        nameSearch:''
+export default function SearchBar ({onSubmit}) {
+    const [nameSearch, setNameSearch] = useState('');
+
+    const handleNameChange = (event) => {
+        setNameSearch(event.currentTarget.value.toLowerCase());
     }
 
-    static propTypes = {
-        onSubmit: PropTypes.func.isRequired,
-    };
-
-
-    handleNameChange =event=>{
-       this.setState({nameSearch:event.currentTarget.value.toLowerCase()});
-    }
-
-    handleSubmit=event=>{
-        event.preventDefault()
-        if(this.state.nameSearch.trim()===''){
+    function handleSubmit (event) {
+        event.preventDefault();
+        if(nameSearch.trim()===''){
            return alert ('Please entry')
         }
-        this.props.onSubmit(this.state.nameSearch)
-        this.setState({nameSearch:''})
+        onSubmit(nameSearch)
+        setNameSearch('')
     }
 
-    render(){
-        const {search}=this.state
         return (
             <SearchBarStyle>
                 <header className="searchbar">
-                    <SearchForm onSubmit={this.handleSubmit} className="form">
-
+                    <SearchForm onSubmit={handleSubmit} className="form">
                         <SearchFormInput
-                            value={search}
+                            value={nameSearch}
                             name='images'
                             className="input"
                             type="text"
                             placeholder="Search images and photos"
-                            onChange={this.handleNameChange}
+                            onChange={handleNameChange}
                         />
                         <SearchFormButton type="submit" className="button">
                             <ImSearch style={{marginRight:8}}/>
@@ -51,4 +40,3 @@ export default class SearchBar extends Component{
             </SearchBarStyle>
         );
     }
-};

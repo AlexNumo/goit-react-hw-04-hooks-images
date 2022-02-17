@@ -1,106 +1,83 @@
 import SearchBar from "./Components/SearchBar/Searchbar";
 import ImageGallery from "./Components/ImageGallery/ImageGallery";
 import Loader from "./Components/Loader/Loader";
-import React, {Component} from "react";
+import {useEffect, useState} from "react";
 import Modal from "./Components/Modal/Modal";
 import ButtonLoadMore from "./Components/Button/Button";
+import fetchQuery from "./Components/Services/FetchQuery";
 import { AppStyle, PhotoModal } from "./App.styled";
-//=====================================================
-const API_KEY = '22475495-2c8e7700259b36f6d1c49a123';
-const PER_PAGE = 12;
 
 
-export default class App extends Component {
+const App = () => {
 
-    state = {
-        currentPage: 0,
-        searchObject: '',
-        hits: [],
-        error: null,
-        isLoading: false,
-        showModal: false,
-        tags: '',
-        largeImageURL: ''
-    }
+    const [currentPage, setCurrentPage] = useState('1');
+    const [searchObject, setSearchObject] = useState('');
+    const [hits, setHits] = useState([]);
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [tags, setTags] = useState('');
+    const [largeImageURL, setLargeImageURL] = useState('');
 
-    // loadHidden(){
-    //    const loadHidden = document.querySelector('.button');
-    //    console.log(loadHidden);
-    // }
-
-    componentDidUpdate(prevProps, prevState){
-        const prevName = prevState.searchObject
-        const nextName = this.state.searchObject
-        if(prevName !== nextName) {
-            this.fetchQuery()
-        }
-    }
-
-    fetchQuery = () => {
-        const {searchObject, currentPage} = this.state
-        this.setState({isLoading: true,})
-        fetch(`https://pixabay.com/api/?q=${searchObject}&page=${currentPage}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${PER_PAGE}`)
-            .then(response => {
-                if(response.ok) {
-                    return response.json();
-                }
-
-                return Promise.reject(new Error('Somes wrong'))
-            })
+    useEffect(() =>{
+        if(!searchObject) return;
+        setIsLoading(true);
+        fetchQuery ({searchObject, currentPage})
             .then(({hits}) => {
+                const images = hits.map(({webformatURL, id, tags, largeImageURL}) => ({
+                    webformatURL, id, tags, largeImageURL
+                }))
                 if(hits.length === 0) {
-
                     return Promise.reject(new Error("Check your enter"))
                 }
-                this.setState((prevState) => ({
-                    hits: [...prevState.hits, ...hits], currentPage: prevState.currentPage + 1
-                }))
+                setHits((state) => [...state, ...images])
             })
-            .catch(error => this.setState({error}))
-            .finally(() => this.setState({isLoading: false}))
+            .catch(error => setError(error))
+            .finally(() => setIsLoading(false))
+    }, [searchObject, currentPage]);
+
+ 
+    const onLoadMoreButton = () => {
+        setCurrentPage(state => (state + 1))
     }
 
-
-    handleFormSubmit = searchObject => {
-        this.setState({
-            searchObject:searchObject,
-            currentPage:1,
-            hits:[],
-            error:null
-        })
+    const handleFormSubmit = query => {
+        setSearchObject(query)
+        setCurrentPage(1)
+        setHits([])
+        setError(null)
     }
 
-    toggleModal = () => {
-        this.setState(({showModal}) => ({showModal: !showModal}))
+    const toggleModal = () => {
+        setShowModal( !showModal)
     }
 
-
-    onModal = ({largeImageURL, tags}) => {
-        this.setState({
-            largeImageURL: largeImageURL,
-            tags: tags,
-        });
-        this.toggleModal();
+    const onModal = ({largeImageURL, tags}) => {
+        setLargeImageURL(largeImageURL)
+        setTags(tags)
+        toggleModal({});
     };
 
+    const renderButtonLoadMore = hits.length > 0 && !isLoading
 
-    render(){
-        const {hits, error, isLoading, showModal, tags, largeImageURL} = this.state;
-        const renderButtonLoadMore = Math.ceil((this.state.currentPage-1)*12/hits.length) === 1 && !isLoading;
+    // render(){
+    //     const {hits, error, isLoading, showModal, tags, largeImageURL} = this.state;
+    //     const renderButtonLoadMore = Math.ceil((this.state.currentPage-1)*12/hits.length) === 1 && !isLoading;
 
 
-        return (
-
-            <AppStyle>
-                <SearchBar onSubmit={this.handleFormSubmit}/>
-                {isLoading && <Loader/>}
-                {error && <h1>{error.message}</h1>}
-                <ImageGallery showQuery={hits} onClick={this.onModal}/>
-                {renderButtonLoadMore && <ButtonLoadMore onClick={this.fetchQuery}/>}
-                {showModal && <Modal onClose={this.toggleModal}>
-                    <PhotoModal src={largeImageURL} alt={tags}/>
-                </Modal>}
-            </AppStyle>)
+    return (
+        <AppStyle>
+            <SearchBar onSubmit={handleFormSubmit}/>
+            {error && <h1>{error.message}</h1>}
+            {hits.length > 0 && <ImageGallery showQuery={hits} onClick={onModal}/>}
+            {isLoading && <Loader/>}
+            {renderButtonLoadMore && <ButtonLoadMore onClick={onLoadMoreButton}/>}
+            {showModal && <Modal onClose={toggleModal}>
+                <PhotoModal src={largeImageURL} alt={tags}/>
+            </Modal>}
+        </AppStyle>)
 
     }
-}
+
+
+export default App;
