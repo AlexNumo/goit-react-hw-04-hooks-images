@@ -2,10 +2,10 @@ import ImageGalleryItem from "../ImageGalleryItem/ImageGalleryItem";
 import PropTypes from "prop-types";
 import { ImageGalleryStyle } from "./ImageGallery.styled";
 
-export const ImageGallery = ({showQuery,onClick}) => {
+export const ImageGallery = ({showQuery, onClick}) => {
     return (
         <ImageGalleryStyle>
-            {showQuery.map(({webformatURL, id, tags,largeImageURL}) => (
+            {showQuery.map(({webformatURL, id, tags, largeImageURL}) => (
                 <ImageGalleryItem
                     key={id}
                     tags={tags}

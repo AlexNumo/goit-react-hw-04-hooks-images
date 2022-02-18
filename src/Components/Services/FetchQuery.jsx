@@ -9,7 +9,7 @@ function fetchQuery(query, page){
                 return response.json();
             }
             return Promise.reject(
-                new Error('Упс что-то пошло не так'))
+                new Error('Somes wrong'))
         })
 }
 
